@@ -91,6 +91,17 @@ def add_user(surname, name, age, position, speciality,
     db_sess.commit()
 
 
+@app.route('/addjob', methods=['GET', 'POST'])
+def addjob():
+    form = JobsForm()
+    if form.validate_on_submit():
+        add_job(form.team_leader.data, form.job.data, form.work_size.data,
+                form.collaborators.data, datetime.datetime.now(),
+                form.is_finished.data)
+        return redirect('/jobs')
+    return render_template('addjob.html', title='Adding a Job', form=form)
+
+
 def add_job(team_leader, job_, work_size,
             collaborators, start_date, is_finished):
     job = Jobs(
