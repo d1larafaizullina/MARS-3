@@ -1,7 +1,9 @@
 import datetime
 
-from flask import Flask, render_template, redirect
+from flask import Flask, render_template, redirect, request
 from flask_login import LoginManager, login_user, login_required, logout_user
+from flask_login import current_user
+from werkzeug.exceptions import abort
 
 from forms.loginform import LoginForm
 from forms.user import RegisterForm
@@ -14,6 +16,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
+login_manager.login_view = 'login'
 
 
 @login_manager.user_loader
@@ -23,11 +26,11 @@ def load_user(user_id):
 
 
 @app.route("/")
-@app.route("/jobs")
+@app.route("/index")
 def index():
     db_sess = db_session.create_session()
     jobs = db_sess.query(Jobs).all()  # filter(News.is_private != True)
-    return render_template("jobs.html", jobs=jobs)
+    return render_template("index.html", jobs=jobs)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -92,13 +95,14 @@ def add_user(surname, name, age, position, speciality,
 
 
 @app.route('/addjob', methods=['GET', 'POST'])
+@login_required
 def addjob():
     form = JobsForm()
     if form.validate_on_submit():
         add_job(form.team_leader.data, form.job.data, form.work_size.data,
                 form.collaborators.data, datetime.datetime.now(),
                 form.is_finished.data)
-        return redirect('/jobs')
+        return redirect('/')
     return render_template('addjob.html', title='Adding a Job', form=form)
 
 
@@ -115,6 +119,69 @@ def add_job(team_leader, job_, work_size,
     db_sess = db_session.create_session()
     db_sess.add(job)
     db_sess.commit()
+
+
+@app.route('/jobs/<int:_id>', methods=['GET', 'POST'])
+@login_required
+def edit_job(_id):
+    form = JobsForm()
+    if request.method == 'GET':
+        db_sess = db_session.create_session()
+        job = db_sess.query(Jobs).\
+            filter(Jobs.id == _id,
+                   (Jobs.user == current_user) |
+                   (current_user.id == Jobs.team_leader) |
+                   (current_user.id == 1)).first()
+        if job:
+            form.team_leader.data = job.team_leader
+            form.job.data = job.job
+            form.work_size.data = job.work_size
+            form.collaborators.data = job.collaborators
+            form.start_date.data = job.start_date
+            form.is_finished.data = job.is_finished
+        else:
+            abort(404)
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        job = db_sess.query(Jobs).\
+            filter(Jobs.id == _id,
+                   (Jobs.user == current_user) |
+                   (current_user.id == Jobs.team_leader) |
+                   (current_user.id == 1)).first()
+        if job:
+            print(job.user.id, current_user.id)
+            job.team_leader = form.team_leader.data
+            job.job = form.job.data
+            job.work_size = form.work_size.data
+            job.collaborators = form.collaborators.data
+            job.start_date = form.start_date.data
+            job.is_finished = form.is_finished.data
+            # db_sess.update(job)
+            db_sess.commit()
+            print('success commit')
+            return redirect('/')
+        else:
+            abort(404)
+    return render_template('addjob.html',
+                           title='Редактирование новости',
+                           form=form
+                           )
+
+
+@app.route('/job_delete/<int:_id>', methods=['GET', 'POST'])
+@login_required
+def job_delete(_id):
+    db_sess = db_session.create_session()
+    job = db_sess.query(Jobs).filter(Jobs.id == _id,
+                                     (Jobs.user == current_user) |
+                                     (current_user.id == Jobs.team_leader) |
+                                     (current_user.id == 1)).first()
+    if job:
+        db_sess.delete(job)
+        db_sess.commit()
+    else:
+        abort(404)
+    return redirect('/')
 
 
 def main():
