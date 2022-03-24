@@ -1,14 +1,3 @@
-"""
-По мере роста поселения колонистов на Марсе возникает необходимость объединить всех специалистов в департаменты
- и хранить информацию о них в отдельной модели.
-  Поэтому нам нужно расширить базу данных колонистов еще одной моделью Department с полями:
-
-id
-title (String)
-chief (Integer)
-members (list of id`s)
-email (String)
-"""
 import sqlalchemy
 import sqlalchemy.orm as orm
 from .db_session import SqlAlchemyBase
