@@ -1,4 +1,5 @@
 import datetime
+import os
 
 from flask import Flask, render_template, redirect, request
 from flask_login import LoginManager, login_user, login_required, logout_user
@@ -108,6 +109,7 @@ def addjob():
 
 def add_job(team_leader, job_, work_size,
             collaborators, start_date, is_finished):
+    db_sess = db_session.create_session()
     job = Jobs(
         team_leader=team_leader,
         job=job_,
@@ -116,7 +118,6 @@ def add_job(team_leader, job_, work_size,
         start_date=start_date,
         is_finished=is_finished
     )
-    db_sess = db_session.create_session()
     db_sess.add(job)
     db_sess.commit()
 
@@ -127,7 +128,7 @@ def edit_job(_id):
     form = JobsForm()
     if request.method == 'GET':
         db_sess = db_session.create_session()
-        job = db_sess.query(Jobs).\
+        job = db_sess.query(Jobs). \
             filter(Jobs.id == _id,
                    (Jobs.user == current_user) |
                    (current_user.id == Jobs.team_leader) |
@@ -143,13 +144,12 @@ def edit_job(_id):
             abort(404)
     if form.validate_on_submit():
         db_sess = db_session.create_session()
-        job = db_sess.query(Jobs).\
+        job = db_sess.query(Jobs). \
             filter(Jobs.id == _id,
                    (Jobs.user == current_user) |
                    (current_user.id == Jobs.team_leader) |
                    (current_user.id == 1)).first()
         if job:
-            print(job.user.id, current_user.id)
             job.team_leader = form.team_leader.data
             job.job = form.job.data
             job.work_size = form.work_size.data
@@ -158,7 +158,6 @@ def edit_job(_id):
             job.is_finished = form.is_finished.data
             # db_sess.update(job)
             db_sess.commit()
-            print('success commit')
             return redirect('/')
         else:
             abort(404)
@@ -185,23 +184,25 @@ def job_delete(_id):
 
 
 def main():
+    db_exist = os.path.exists("db/mars_explorer.sqlite")
     db_session.global_init("db/mars_explorer.sqlite")
 
     # Добавляем капитана
-    add_user("Scott", "Ridley", 21, "captain", "research engineer",
-             "module_1", "scott_chief@mars.org")
-    add_user("Solo", "Han", 28, "pilot", "repair engineer",
-             "module_2", "solo_han@mars.org")
-    add_user("Dameron", "Poe", 34, "pilot", "navigator",
-             "module_2", "dameron_poe@mars.org")
-    add_user("Windu", "Mace", 43, "Jedi Masters", "teacher",
-             "module_3", "windu_mace@mars.org")
+    if not db_exist:
+        add_user("Scott", "Ridley", 21, "captain", "research engineer",
+                 "module_1", "scott_chief@mars.org")
+        add_user("Solo", "Han", 28, "pilot", "repair engineer",
+                 "module_2", "solo_han@mars.org")
+        add_user("Dameron", "Poe", 34, "pilot", "navigator",
+                 "module_2", "dameron_poe@mars.org")
+        add_user("Windu", "Mace", 43, "Jedi Masters", "teacher",
+                 "module_3", "windu_mace@mars.org")
 
-    # Первая работа
-    add_job(1, "deployment of residential modules 1 and 2", 15, "2, 3",
-            datetime.datetime.now(), False)
-    add_job(2, "deployment of residential modules 2 and 3", 15, "1, 2",
-            datetime.datetime.now(), False)
+        # Первая работа
+        add_job(1, "deployment of residential modules 1 and 2", 15, "2, 3",
+                datetime.datetime.now(), False)
+        add_job(2, "deployment of residential modules 2 and 3", 15, "1, 2",
+                datetime.datetime.now(), False)
 
     app.run(port=8080, host='127.0.0.1')  # , debug=True)
 
