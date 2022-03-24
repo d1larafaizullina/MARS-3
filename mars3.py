@@ -188,8 +188,9 @@ def job_delete(_id):
 @app.route("/departments")
 def all_departments():
     db_sess = db_session.create_session()
-    departments = db_sess.query(Department).all()
-    return render_template("departments.html", departments=departments)
+    # departments = db_sess.query(Department).all()
+    data = db_sess.query(Department, User).join(User).all()
+    return render_template("departments.html", data=data)
 
 
 @app.route('/adddepartment', methods=['GET', 'POST'])
