@@ -78,7 +78,7 @@ def reqister():
 
 
 def add_user(surname, name, age, position, speciality,
-             address, email, password="P@ssw0rd"):
+             address, email, password="123456"):
     user = User(
         surname=surname,
         name=name,
@@ -187,7 +187,7 @@ def main():
     db_exist = os.path.exists("db/mars_explorer.sqlite")
     db_session.global_init("db/mars_explorer.sqlite")
 
-    # Добавляем капитана
+    # Добавляем капитана, по умолчанию password="123456"
     if not db_exist:
         add_user("Scott", "Ridley", 21, "captain", "research engineer",
                  "module_1", "scott_chief@mars.org")
