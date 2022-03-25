@@ -1,7 +1,7 @@
 import datetime
 import os
 
-from flask import Flask, render_template, redirect, request
+from flask import Flask, render_template, redirect, request, make_response, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user
 from flask_login import current_user
 from werkzeug.exceptions import abort
@@ -10,13 +10,15 @@ from forms.loginform import LoginForm
 from forms.user import RegisterForm
 from forms.job import JobsForm
 from forms.department import DepartmentForm
-from data import db_session
+from data import db_session, jobs_api
 from data.users import User
 from data.jobs import Jobs
 from data.departments import Department
+from data.my_json_encoder import MyJSONEncoder
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
+app.json_encoder = MyJSONEncoder
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -264,9 +266,15 @@ def department_delete(dep_id):
     return redirect('/departments')
 
 
+@app.errorhandler(404)
+def not_found(error):
+    return make_response(jsonify({'error': '404 - Not found'}), 404)
+
+
 def main():
     db_exist = os.path.exists("db/mars_explorer.sqlite")
     db_session.global_init("db/mars_explorer.sqlite")
+    app.register_blueprint(jobs_api.blueprint)
 
     # Добавляем капитана, по умолчанию password="123456"
     if not db_exist:
