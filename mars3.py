@@ -4,6 +4,7 @@ import os
 from flask import Flask, render_template, redirect, request, make_response, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user
 from flask_login import current_user
+from flask_restful import Api
 from werkzeug.exceptions import abort
 
 from forms.loginform import LoginForm
@@ -15,6 +16,9 @@ from data.users import User
 from data.jobs import Jobs
 from data.departments import Department
 from data.my_json_encoder import MyJSONEncoder
+# api v2 (flask_restful)
+from data import users_resource
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -22,6 +26,7 @@ app.json_encoder = MyJSONEncoder
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+api = Api(app)  # api v2 (flask_restful)
 
 
 @login_manager.user_loader
@@ -293,6 +298,11 @@ def main():
                 datetime.datetime.now(), False)
         add_job(2, "deployment of residential modules 2 and 3", 15, "1, 2",
                 datetime.datetime.now(), False)
+    # api v2 (flask-restful)
+    # для списка объектов
+    api.add_resource(users_resource.UsersListResource, '/api/v2/users')
+    # для одного объекта
+    api.add_resource(users_resource.UsersResource, '/api/v2/users/<int:users_id>')
 
     app.run(port=8080, host='127.0.0.1')  # , debug=True)
 
