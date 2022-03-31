@@ -28,15 +28,17 @@ print(post('http://localhost:8080/api/jobs', json=data_json).json())
 
 print('Корректное создание работы')
 data_json = {"collaborators": "1, 3",
-             "job": "deployment of residential modules 33 and 44",
+             "job": "deployment of residential modules 33 and 44 api v1 posts",
              "team_leader": 1, "work_size": 15}
-# print(post('http://localhost:8080/api/jobs', json=data_json).json())
+print(post('http://localhost:8080/api/jobs', json=data_json).json())
 
 # delete_jobs
+print('Удаление работы с несуществующим id')
 print(delete('http://localhost:8080/api/jobs/999').json())
 # новости с id = 999 нет в базе
 
-print(delete('http://localhost:8080/api/jobs/1').json())
+print('Корректное удаление работы id==1 (закомментирована)')
+# print(delete('http://localhost:8080/api/jobs/1').json())
 
 print('Получение всех работ')
 print(get('http://localhost:8080/api/jobs').json())

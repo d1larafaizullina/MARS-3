@@ -18,6 +18,7 @@ from data.departments import Department
 from data.my_json_encoder import MyJSONEncoder
 # api v2 (flask_restful)
 from data import users_resource
+from data import jobs_resource
 
 
 app = Flask(__name__)
@@ -301,8 +302,10 @@ def main():
     # api v2 (flask-restful)
     # для списка объектов
     api.add_resource(users_resource.UsersListResource, '/api/v2/users')
+    api.add_resource(jobs_resource.JobsListResource, '/api/v2/jobs')
     # для одного объекта
     api.add_resource(users_resource.UsersResource, '/api/v2/users/<int:users_id>')
+    api.add_resource(jobs_resource.JobsResource, '/api/v2/jobs/<int:job_id>')
 
     app.run(port=8080, host='127.0.0.1')  # , debug=True)
 
